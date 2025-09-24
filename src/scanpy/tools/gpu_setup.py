@@ -1,22 +1,17 @@
-"""
-GPU Environment Setup and Library Loading
-Handles CUDA library fixes and GPU initialization
-"""
-
+# gpu_setup.py - Fixed version
 import os
 import ctypes
 import subprocess
 import sys
-import numpy as np
-import scipy.sparse as sp
 
 def install_requirements():
-    """Install packages if needed - check basic packages only"""
+    """Install packages if needed"""
+    # DON'T import cuML here - just check if basic packages exist
     try:
         import numpy
-        print("All basic packages available")
+        print("✅ Basic packages available")
     except ImportError:
-        print("Installing missing packages...")
+        print("📦 Installing missing packages...")
         
         packages = [
             "numpy", "scipy", "pandas", "matplotlib", "seaborn", "psutil",
@@ -27,33 +22,18 @@ def install_requirements():
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", package])
             except subprocess.CalledProcessError:
-                print(f"Failed to install {package}")
+                print(f"⚠️ Failed to install {package}")
         
         # GPU packages
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "cupy-cuda12x", "cuml-cu12"])
         except subprocess.CalledProcessError:
-            print("GPU packages failed")
+            print("⚠️ GPU packages failed")
 
 def fix_cuda_libraries():
-    """Fix CUDA library loading issues - comprehensive version"""
-    possible_paths = [
-        '/home/shadeform/.local/lib/python3.10/site-packages/nvidia',
-        '/usr/local/lib/python3.10/dist-packages/nvidia',
-        '/opt/conda/lib/python3.10/site-packages/nvidia'
-    ]
+    """Fix CUDA library loading issues"""
+    base_path = '/home/shadeform/.local/lib/python3.10/site-packages/nvidia'
     
-    base_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            base_path = path
-            break
-    
-    if not base_path:
-        print("NVIDIA packages not found, skipping CUDA fix")
-        return False
-    
-    # List of critical CUDA libraries to load
     cuda_libs = [
         ('cuda_runtime', 'libcudart.so.12'),
         ('cuda_nvrtc', 'libnvrtc.so.12'),
@@ -80,7 +60,7 @@ def fix_cuda_libraries():
         except Exception as e:
             failed_libs.append(f"{lib_name} (error: {e})")
     
-    # Set LD_LIBRARY_PATH as backup
+    # Set LD_LIBRARY_PATH
     lib_paths = []
     for lib_dir, _ in cuda_libs:
         lib_path = os.path.join(base_path, lib_dir, 'lib')
@@ -92,28 +72,28 @@ def fix_cuda_libraries():
         new_path = ':'.join(lib_paths)
         os.environ['LD_LIBRARY_PATH'] = f"{new_path}:{current_path}" if current_path else new_path
     
-    print(f"Loaded {len(loaded_libs)} libraries: {', '.join(loaded_libs)}")
+    print(f"✅ Loaded {len(loaded_libs)} libraries: {', '.join(loaded_libs)}")
     if failed_libs:
-        print(f"Failed to load {len(failed_libs)} libraries: {', '.join(failed_libs)}")
+        print(f"⚠️ Failed to load {len(failed_libs)} libraries: {', '.join(failed_libs)}")
     
     return len(loaded_libs) > 0
 
 def init_gpu(seed=42, use_rmm=False):
     """Initialize GPU environment with proper order"""
-    print("Checking basic packages...")
+    print("📦 Checking basic packages...")
     install_requirements()
     
-    print("Fixing CUDA libraries...")
+    print("🔧 Fixing CUDA libraries...")
     fix_cuda_libraries()
     
-    print("Importing GPU libraries...")
+    print("📥 Importing GPU libraries...")
     # Import GPU libraries AFTER CUDA fix
     try:
         import cupy as cp
         from cuml.common import set_global_output_type
         
         test_array = cp.array([1, 2, 3])
-        print(f"CuPy working: {test_array}")
+        print(f"✅ CuPy working: {test_array}")
         
         cp.random.seed(seed)
         set_global_output_type("cupy")
@@ -124,7 +104,7 @@ def init_gpu(seed=42, use_rmm=False):
         return env_config
         
     except Exception as e:
-        print(f"GPU initialization failed: {e}")
+        print(f"❌ GPU initialization failed: {e}")
         raise
 
 # Constants

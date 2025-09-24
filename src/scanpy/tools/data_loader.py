@@ -12,19 +12,31 @@ def load_and_validate_data(file_path):
     """Load MuData and perform basic validation"""
     print(f"Loading data from: {file_path}")
     
-    # Load MuData
-    mdata = mu.read_10x_h5(file_path)
+    # Check file extension to determine format
+    if file_path.endswith('.h5mu'):
+        # Already a MuData file
+        mdata = mu.read(file_path)
+        print("Loaded existing MuData file")
+    else:
+        # Raw 10X HDF5 file
+        mdata = mu.read_10x_h5(file_path)
+        print("Loaded 10X HDF5 file")
     
-    # Make variable names unique
-    mdata["rna"].var_names_make_unique()
-    mdata["atac"].var_names_make_unique()
+    # Make variable names unique if needed
+    if "rna" in mdata.mod:
+        mdata["rna"].var_names_make_unique()
+    if "atac" in mdata.mod:
+        mdata["atac"].var_names_make_unique()
     
     # Convert to float32 for GPU efficiency
-    mdata["rna"].X = mdata["rna"].X.astype(np.float32, copy=False)
-    mdata["atac"].X = mdata["atac"].X.astype(np.float32, copy=False)
+    if "rna" in mdata.mod:
+        mdata["rna"].X = mdata["rna"].X.astype(np.float32, copy=False)
+    if "atac" in mdata.mod:
+        mdata["atac"].X = mdata["atac"].X.astype(np.float32, copy=False)
     
     # Alignment check
-    assert mdata["rna"].obs_names.equals(mdata["atac"].obs_names), "Cell alignment failed"
+    if "rna" in mdata.mod and "atac" in mdata.mod:
+        assert mdata["rna"].obs_names.equals(mdata["atac"].obs_names), "Cell alignment failed"
     
     print(f"[DATA] Cells: {mdata.n_obs}, RNA features: {mdata['rna'].n_vars}, ATAC features: {mdata['atac'].n_vars}")
     

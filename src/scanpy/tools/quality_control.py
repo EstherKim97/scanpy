@@ -79,7 +79,7 @@ def qc_connectivity(adata, conn_key, tol=1e-3):
     print(f"[QC] {conn_key}: nnz={A.nnz}, max_row_dev={max_dev:.3e}, mean_row_dev={mean_dev:.3e}, density={density:.4e}, approx_symmetric={is_symmetric}")
     
     return {
-        "nnz": list(A.nnz),
+        "nnz": int(A.nnz),
         "max_row_dev": max_dev,
         "mean_row_dev": mean_dev,
         "density": density,
