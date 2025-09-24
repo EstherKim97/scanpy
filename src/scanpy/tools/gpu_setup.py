@@ -1,19 +1,57 @@
 """
-
 GPU Environment Setup and Library Loading
 Handles CUDA library fixes and GPU initialization
-
 """
 
 import os
 import ctypes
+import subprocess
+import sys
 import numpy as np
 import scipy.sparse as sp
 
+def install_requirements():
+    """Install packages if needed - check basic packages only"""
+    try:
+        import numpy
+        print("All basic packages available")
+    except ImportError:
+        print("Installing missing packages...")
+        
+        packages = [
+            "numpy", "scipy", "pandas", "matplotlib", "seaborn", "psutil",
+            "scanpy", "muon", "anndata", "h5py", "tables", "scikit-learn"
+        ]
+        
+        for package in packages:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", package])
+            except subprocess.CalledProcessError:
+                print(f"Failed to install {package}")
+        
+        # GPU packages
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "cupy-cuda12x", "cuml-cu12"])
+        except subprocess.CalledProcessError:
+            print("GPU packages failed")
+
 def fix_cuda_libraries():
     """Fix CUDA library loading issues - comprehensive version"""
+    possible_paths = [
+        '/home/shadeform/.local/lib/python3.10/site-packages/nvidia',
+        '/usr/local/lib/python3.10/dist-packages/nvidia',
+        '/opt/conda/lib/python3.10/site-packages/nvidia'
+    ]
     
-    base_path = '/home/shadeform/.venv/lib/python3.12/site-packages/nvidia'
+    base_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            base_path = path
+            break
+    
+    if not base_path:
+        print("NVIDIA packages not found, skipping CUDA fix")
+        return False
     
     # List of critical CUDA libraries to load
     cuda_libs = [
@@ -54,43 +92,45 @@ def fix_cuda_libraries():
         new_path = ':'.join(lib_paths)
         os.environ['LD_LIBRARY_PATH'] = f"{new_path}:{current_path}" if current_path else new_path
     
-    print(f"✅ Loaded {len(loaded_libs)} libraries: {', '.join(loaded_libs)}")
+    print(f"Loaded {len(loaded_libs)} libraries: {', '.join(loaded_libs)}")
     if failed_libs:
-        print(f"⚠️  Failed to load {len(failed_libs)} libraries: {', '.join(failed_libs)}")
+        print(f"Failed to load {len(failed_libs)} libraries: {', '.join(failed_libs)}")
     
     return len(loaded_libs) > 0
 
 def init_gpu(seed=42, use_rmm=False):
-    """Initialize GPU environment"""
-    # Apply CUDA library fix first
+    """Initialize GPU environment with proper order"""
+    print("Checking basic packages...")
+    install_requirements()
+    
+    print("Fixing CUDA libraries...")
     fix_cuda_libraries()
     
-    # Import after library fix
-    import cupy as cp
-    from cuml.common import set_global_output_type
-    
-    # Test CuPy functionality
+    print("Importing GPU libraries...")
+    # Import GPU libraries AFTER CUDA fix
     try:
+        import cupy as cp
+        from cuml.common import set_global_output_type
+        
         test_array = cp.array([1, 2, 3])
-        print(f"✅ CuPy working: {test_array}")
+        print(f"CuPy working: {test_array}")
+        
+        cp.random.seed(seed)
+        set_global_output_type("cupy")
+        
+        env_config = {"seed": seed, "rmm_enabled": use_rmm}
+        print(f"[GPU READY] {env_config}")
+        
+        return env_config
+        
     except Exception as e:
-        print(f"❌ CuPy failed: {e}")
+        print(f"GPU initialization failed: {e}")
         raise
-    
-    # Set random seed and output type
-    cp.random.seed(seed)
-    set_global_output_type("cupy")
-    
-    env_config = {"seed": seed, "rmm_enabled": use_rmm}
-    print(f"[GPU READY] {env_config}")
-    
-    return env_config
 
 # Constants
 SEED = 42
 EPS = 1e-12
 
 if __name__ == "__main__":
-    # Test the setup
     env = init_gpu(seed=SEED)
     print("GPU setup completed successfully!")

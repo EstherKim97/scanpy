@@ -34,7 +34,7 @@ def qc_embedding(adata, key, expected_dim, label=""):
     print(f"[QC] {key}: shape={Z.shape}, finite=OK, var_range=[{min_var:.3e}, {max_var:.3e}], mean_var={mean_var:.3e}")
     
     return {
-        "shape": Z.shape,
+        "shape": list(Z.shape),
         "min_var": min_var,
         "max_var": max_var,
         "mean_var": mean_var
@@ -79,7 +79,7 @@ def qc_connectivity(adata, conn_key, tol=1e-3):
     print(f"[QC] {conn_key}: nnz={A.nnz}, max_row_dev={max_dev:.3e}, mean_row_dev={mean_dev:.3e}, density={density:.4e}, approx_symmetric={is_symmetric}")
     
     return {
-        "nnz": A.nnz,
+        "nnz": list(A.nnz),
         "max_row_dev": max_dev,
         "mean_row_dev": mean_dev,
         "density": density,
@@ -125,7 +125,7 @@ def qc_knn_results(adata, label, expected_k):
     print(f"[QC] KNN {label}: shape={D.shape}, mean_dist={mean_dist:.3e}, max_dist={max_dist:.3e}, includes_self={includes_self}")
     
     return {
-        "shape": D.shape,
+        "shape": list(D.shape),
         "mean_dist": mean_dist,
         "max_dist": max_dist,
         "includes_self": includes_self

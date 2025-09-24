@@ -6,11 +6,13 @@ Builds KNN graphs using cuML on GPU
 """
 
 import cupy as cp
-from cuml.neighbors import NearestNeighbors
 from gpu_setup import SEED
 
 def build_knn_gpu(Z, k=15, metric="euclidean"):
     """Build KNN graph on GPU"""
+
+    from cuml.neighbors import NearestNeighbors
+    
     # Ensure data is on GPU and contiguous
     Z = cp.asarray(Z, dtype=cp.float32)
     if not Z.flags.c_contiguous:

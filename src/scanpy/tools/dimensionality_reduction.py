@@ -7,14 +7,12 @@ Handles dimensionality reduction for both dense and sparse data
 
 import numpy as np
 import scipy.sparse as sp
-import cupy as cp
-import cupyx.scipy.sparse as cpx_sp
-from cuml.decomposition import PCA as GPUPCA
 from gpu_setup import SEED
 
 def run_pca_dense(X, n_components=50):
     """cuML PCA on dense data"""
     from cuml.decomposition import PCA as GPUPCA
+    import cupy as cp
     
     # Convert to GPU array
     Xg = cp.asarray(X, dtype=cp.float32, order="C")
@@ -38,6 +36,8 @@ def run_tsvd_sparse(X, n_components=50, seed=SEED):
     try:
         # Try cuML TSVD on GPU
         from cuml.decomposition import TruncatedSVD as TSVD
+        import cupy as cp
+        import cupyx.scipy.sparse as cpx_sp
         
         # Convert to GPU sparse matrix
         Xcsr = X.tocsr().astype(np.float32)

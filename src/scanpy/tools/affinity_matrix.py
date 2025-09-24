@@ -6,11 +6,12 @@ Converts KNN distances to symmetric, normalized affinity matrices
 """
 
 import cupy as cp
-import cupyx.scipy.sparse as cpx_sp
 from gpu_setup import EPS
 
 def distances_to_affinities(D, I, add_self=True, self_loop_value=1.0):
     """Convert KNN distances to symmetric affinity matrix"""
+    import cupyx.scipy.sparse as cpx_sp
+    
     n, k = I.shape
     print(f"[AFFINITY] Converting distances: n={n}, k={k}")
     

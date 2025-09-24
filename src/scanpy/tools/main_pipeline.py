@@ -37,10 +37,10 @@ def create_handoff_metadata(mdata, params_rna, params_atac):
             "atac": params_atac["method"]
         },
         "data_shapes": {
-            "rna_embedding": tuple(mdata["rna"].obsm["X_pca_rna"].shape),
-            "atac_embedding": tuple(mdata["atac"].obsm["X_pca_atac"].shape),
-            "rna_connectivity": tuple(mdata["rna"].obsp["conn_rna"].shape),
-            "atac_connectivity": tuple(mdata["atac"].obsp["conn_atac"].shape)
+            "rna_embedding": list(mdata["rna"].obsm["X_pca_rna"].shape),  # Convert to list
+            "atac_embedding": list(mdata["atac"].obsm["X_pca_atac"].shape),
+            "rna_connectivity": list(mdata["rna"].obsp["conn_rna"].shape),
+            "atac_connectivity": list(mdata["atac"].obsp["conn_atac"].shape)
         },
         "next_steps": [
             "Load pbmc_person2_output.h5mu",
